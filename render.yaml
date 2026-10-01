@@ -30,7 +30,7 @@ services:
         fromService:
           type: web
           name: elecsa-extraction-service
-          property: hostport
+          envVarKey: RENDER_EXTERNAL_URL
       - key: AUTH_USERNAME
         sync: false
       - key: AUTH_PASSWORD_HASH
