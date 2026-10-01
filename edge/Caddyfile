@@ -1,0 +1,14 @@
+{$SITE_ADDRESS} {
+	# Everything under /api goes to the Node backend - it's not
+	# reachable from outside this network otherwise.
+	handle /api/* {
+		reverse_proxy backend:4000
+	}
+
+	# Everything else is the built React app.
+	handle {
+		root * /srv
+		file_server
+		try_files {path} /index.html
+	}
+}

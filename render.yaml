@@ -1,0 +1,52 @@
+# Render Blueprint - deploys all three services together.
+# Validated field-by-field against https://render.com/schema/render.yaml.json
+#
+# extraction-service: private only, never reachable from the public
+#   internet - only "backend" can reach it, over Render's private network.
+# backend: public web service, talks to extraction-service internally.
+# frontend: static site (free, no sleep, free HTTPS, own onrender.com URL).
+#
+# Secrets (AUTH_USERNAME, AUTH_PASSWORD_HASH) use "sync: false", meaning
+# Render prompts for them in the dashboard on first deploy - they are
+# never written into this file or into git. JWT_SECRET is generated
+# automatically by Render itself (a random 256-bit value).
+
+services:
+  - type: pserv
+    name: elecsa-extraction-service
+    runtime: docker
+    plan: free
+    dockerfilePath: ./extraction-service/Dockerfile
+    dockerContext: ./extraction-service
+
+  - type: web
+    name: elecsa-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: EXTRACTION_SERVICE_URL
+        fromService:
+          type: pserv
+          name: elecsa-extraction-service
+          property: hostport
+      - key: AUTH_USERNAME
+        sync: false
+      - key: AUTH_PASSWORD_HASH
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+
+  - type: web
+    name: elecsa-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      # Set manually in the dashboard AFTER elecsa-backend's first
+      # deploy, once its real onrender.com URL is visible - Render's
+      # fromService doesn't expose a ready-made "public URL" property,
+      # so this is filled in by hand rather than guessed at.
+      - key: VITE_BACKEND_URL
+        sync: false

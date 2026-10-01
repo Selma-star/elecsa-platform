@@ -1,0 +1,40 @@
+services:
+  extraction-service:
+    build: ./extraction-service
+    restart: unless-stopped
+    # No "ports" here on purpose - this service is never reached
+    # directly from outside. Only "backend" can reach it, over the
+    # internal Docker network, by service name.
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      - EXTRACTION_SERVICE_URL=http://extraction-service:8001
+      - AUTH_USERNAME=${AUTH_USERNAME}
+      - AUTH_PASSWORD_HASH=${AUTH_PASSWORD_HASH}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - extraction-service
+    # Also no "ports" - only reachable through the edge container's
+    # reverse proxy, at /api/*, never directly.
+
+  edge:
+    build:
+      context: .
+      dockerfile: edge/Dockerfile
+    restart: unless-stopped
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS}
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

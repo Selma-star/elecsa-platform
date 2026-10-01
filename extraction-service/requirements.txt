@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pdfplumber
+openpyxl
+pytesseract
+pdf2image
+pillow
+python-multipart
+pydantic
