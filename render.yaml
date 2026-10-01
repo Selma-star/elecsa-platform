@@ -12,7 +12,7 @@
 # automatically by Render itself (a random 256-bit value).
 
 services:
-  - type: pserv
+  - type: web
     name: elecsa-extraction-service
     runtime: docker
     plan: free
