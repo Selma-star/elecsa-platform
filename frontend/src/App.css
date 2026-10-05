@@ -641,3 +641,23 @@ td input:focus {
 @media (prefers-reduced-motion: reduce) {
   .btn-primary { transition: none; }
 }
+
+.description-input {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  line-height: 1.35;
+  resize: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.description-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(46, 90, 130, 0.10);
+}

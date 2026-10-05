@@ -16,6 +16,7 @@ Two pricing models, chosen by the user in the browser:
 Grayscale only, by request - no color fills or colored text anywhere.
 """
 from io import BytesIO
+from math import ceil
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.cell.rich_text import CellRichText, TextBlock
@@ -242,7 +243,18 @@ def build_devis_workbook(sections, header_rows=None, model="A", arrete_text="") 
                 vertical="center",
                 wrap_text=True
             )
-            ws.row_dimensions[r].height = 24
+            description = str(item.get("description", "") or "")
+            description_width = max(1, int(layout["widths"]["A"]))
+
+            description_lines = sum(      
+                 max(1, ceil(len(line) / description_width))
+                 for line in (description.splitlines() or [""])
+            )
+
+            ws.row_dimensions[r].height = min(
+                120,
+                24 + max(0, description_lines - 1) * 18
+            )
             r += 1
         last_row = r - 1
 

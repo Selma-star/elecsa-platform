@@ -1,4 +1,4 @@
-import { useState, Fragment } from "react";
+import { useState, Fragment, useEffect, useRef } from "react";
 import axios from "axios";
 import "./App.css";
 
@@ -40,9 +40,41 @@ const fmt = (n) =>
   n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const toNumber = (v) => {
-  const n = parseFloat(String(v ?? "").replace(",", "."));
+  const n = parseFloat(String(v ?? "").replace(/\s/g, "").replace(",", "."));
   return isNaN(n) ? 0 : n;
 };
+
+const formatPriceInput = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+
+  const normalized = raw.replace(/\s/g, "").replace(",", ".");
+  const n = Number(normalized);
+
+  return Number.isFinite(n) ? fmt(n) : value;
+};
+
+function AutoResizeTextarea({ value, onChange }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      className="description-input"
+      rows={1}
+      value={value}
+      onChange={onChange}
+    />
+  );
+}
 
 // French number-to-words, verified against two real Sonelgaz devis totals.
 // Handles the real grammar traps: "cents"/"vingts" only take an 's' when
@@ -301,6 +333,10 @@ function App() {
             }
       )
     );
+  };
+
+  const handlePriceBlur = (sectionIdx, itemIdx, field, value) => {
+    updateItem(sectionIdx, itemIdx, field, formatPriceInput(value));
   };
 
   // --- Header field editor helpers ---
@@ -564,12 +600,12 @@ function App() {
                       const montantMeo = toNumber(item.qty) * toNumber(item.puMeo);
                       return (
                         <tr key={ii}>
-                          <td>
-                            <input
-                              value={item.description}
-                              onChange={(e) => updateItem(si, ii, "description", e.target.value)}
-                            />
-                          </td>
+<td>
+  <AutoResizeTextarea
+    value={item.description}
+    onChange={(e) => updateItem(si, ii, "description", e.target.value)}
+  />
+</td>
                           <td className="col-unit">
                             <input
                               value={item.unit}
@@ -591,6 +627,7 @@ function App() {
                                   value={item.puFour}
                                   placeholder="0.00"
                                   onChange={(e) => updateItem(si, ii, "puFour", e.target.value)}
+                                  onBlur={(e) => handlePriceBlur(si, ii, "puFour", e.target.value)}
                                 />
                               </td>
                               <td className="col-price mono readonly-cell">{fmt(montantFour)}</td>
@@ -600,6 +637,7 @@ function App() {
                                   value={item.puMeo}
                                   placeholder="0.00"
                                   onChange={(e) => updateItem(si, ii, "puMeo", e.target.value)}
+                                  onBlur={(e) => handlePriceBlur(si, ii, "puMeo", e.target.value)}
                                 />
                               </td>
                               <td className="col-price mono readonly-cell">{fmt(montantMeo)}</td>
@@ -615,6 +653,7 @@ function App() {
                                   value={item.pu}
                                   placeholder="0.00"
                                   onChange={(e) => updateItem(si, ii, "pu", e.target.value)}
+                                  onBlur={(e) => handlePriceBlur(si, ii, "pu", e.target.value)}
                                 />
                               </td>
                               <td className="col-price mono readonly-cell">
