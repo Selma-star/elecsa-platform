@@ -16,6 +16,7 @@ Two pricing models, chosen by the user in the browser:
 Grayscale only, by request - no color fills or colored text anywhere.
 """
 from io import BytesIO
+import math
 from math import ceil
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -236,25 +237,26 @@ def build_devis_workbook(sections, header_rows=None, model="A", arrete_text="") 
                 montant_cell = ws.cell(row=r, column=5, value=f'=IF(D{r}="","",C{r}*D{r})')
                 montant_cell.fill = PRICE_FILL
 
-            _border_row(ws, r, last_col)
+            price_cols = (4, 5, 6, 7, 8) if model == "B" else (4, 5)
+            for col in price_cols:
+                ws.cell(row=r, column=col).number_format = "#,##0.00"
+
             # Give the cells more vertical breathing room
             for col in range(1, ord(last_col) - ord("A") + 2):
                 ws.cell(row=r, column=col).alignment = Alignment(
                 vertical="center",
                 wrap_text=True
             )
-            description = str(item.get("description", "") or "")
-            description_width = max(1, int(layout["widths"]["A"]))
-
-            description_lines = sum(      
-                 max(1, ceil(len(line) / description_width))
-                 for line in (description.splitlines() or [""])
+                
+            desc = str(item.get("description") or "")
+            chars_per_line = max(1, int(layout["widths"]["A"] * 0.85))
+            n_lines = sum(
+                max(1, math.ceil(len(p) / chars_per_line))
+                for p in (desc.splitlines() or [""])
             )
+            ws.row_dimensions[r].height = min(409, max(24, n_lines * 15 + 6))
 
-            ws.row_dimensions[r].height = min(
-                120,
-                24 + max(0, description_lines - 1) * 18
-            )
+            _border_row(ws, r, last_col)
             r += 1
         last_row = r - 1
 
@@ -342,6 +344,9 @@ def build_devis_workbook(sections, header_rows=None, model="A", arrete_text="") 
     note.value = "Prix saisis dans la plateforme. Totaux calcules automatiquement."
     note.font = Font(name="Arial", italic=True, size=9, color="808080")
 
+    for _r in subtotal_rows + [total_ht_row, tva_row, tva_row + 1]:
+        ws.cell(row=_r, column=ord(total_col) - ord("A") + 1).number_format = "#,##0.00"
+        
     buf = BytesIO()
     wb.save(buf)
     buf.seek(0)
