@@ -341,10 +341,7 @@ def build_devis_workbook(sections, header_rows=None, model="A", arrete_text="") 
         r += 2
 
     ws.merge_cells(f"A{r}:{last_col}{r}")
-    note = ws[f"A{r}"]
-    note.value = "Prix saisis dans la plateforme. Totaux calcules automatiquement."
-    note.font = Font(name="Arial", italic=True, size=9, color="808080")
-
+    
     for _r in subtotal_rows + [total_ht_row, tva_row, tva_row + 1]:
         ws.cell(row=_r, column=ord(total_col) - ord("A") + 1).number_format = "#,##0.00"
 
