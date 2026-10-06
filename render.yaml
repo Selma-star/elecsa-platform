@@ -39,7 +39,7 @@ services:
         generateValue: true
 
   - type: web
-    name: elecsa-frontend
+    name: elecsa-devis
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
