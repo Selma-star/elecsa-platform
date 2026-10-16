@@ -1,0 +1,27 @@
+
+name: Keep ELECSA Services Awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-services:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Wake extraction service
+        run: |
+          curl -sS -L --max-time 120 \
+            -o /dev/null \
+            -w "Extraction service HTTP status: %{http_code}\n" \
+            https://elecsa-extraction-service.onrender.com/ || true
+
+      - name: Wake backend service
+        run: |
+          curl -sS -L --max-time 120 \
+            -o /dev/null \
+            -w "Backend HTTP status: %{http_code}\n" \
+            https://elecsa-backend.onrender.com/ || true
